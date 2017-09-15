@@ -5,6 +5,10 @@ import os, io
 import sys, getopt
 import random
 
+
+HeadProperty = ['a','art','ad','conj','prep','pron','int','n','num','v','vi','vt']
+
+
 if __name__ == '__main__':
 
     columns = 3
@@ -29,6 +33,10 @@ if __name__ == '__main__':
     print 'Input file is "', inputfile
     print 'Output file is "', outputfile
 
+    WordPropSort = {'unknown':[],'odd':[]}
+    for prop in HeadProperty:
+        WordPropSort[prop] = []
+
     content = []
     with io.open(inputfile, 'r', encoding='utf8') as f:
         for line in f.readlines():
@@ -38,9 +46,24 @@ if __name__ == '__main__':
                 if len(splits) > 1:
                     content.append(splits[1].strip()) 
                 else:
-                    content.append(splits[0])
-
+                    WordPropSort['odd'].append(splits[0]) 
+                    #content.append(splits[0])
+    
+    for item in content:
+        issort = False
+        for prop in reversed(HeadProperty):
+            strmean = item.lstrip('*').strip()
+            if strmean.startswith(prop):
+                WordPropSort[prop].append(strmean)
+                issort = True
+                break
+        if issort is not True:
+           WordPropSort['unknown'].append(item) 
+    
     with io.open(outputfile, 'w', encoding='utf8') as of:
-        for meaning in content:
-            meaning += '\n'
-            of.writelines(meaning)
+        keys = HeadProperty + ['unknown','odd']
+        for propkey in keys:
+            of.writelines(u'\n' + propkey + u'\n')
+            for meaning in WordPropSort[propkey]:
+                meaning += '\n'
+                of.writelines(meaning)

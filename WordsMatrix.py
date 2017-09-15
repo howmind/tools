@@ -26,14 +26,13 @@ def MatrixFromXLS(filepath):
         for row in ws.rows:
             if row[1].value == None:
                 if row[0].value != None:
-                    words[sheetname].append(row[0].value)
+                    words[sheetname].append('%-16s' % row[0].value)
             else:
                 if isinstance(row[1].value,float):
-                    words[sheetname].append(str(row[0].value))
+                    words[sheetname].append('%-16s' % str(row[0].value))
                 else:
-                    words[sheetname].append(row[1].value)
+                    words[sheetname].append('%-16s' % row[1].value)
     
-    print words
     return words
 
 
@@ -53,19 +52,19 @@ def CreateMatrixFile(content, outputfile, columns):
         for key in content:
             k = 1
             wordline = ''
-            print repr(key)
-            print repr(key.decode('ascii'))
+            of.writelines(u'\n')
             of.writelines(key.decode('ascii'))
             of.writelines(u'\n')
             for word in content[key]:
+                
                 if k % columns == 0:
-                    wordline += word
-                    print wordline
+                    wordline += word.strip()
                     wordline +=u'\n'
                     of.writelines(wordline)
                     wordline = ''
                 else:
-                    wordline += word + u', '
+                    wordline += word
+
                 k+=1
             if wordline != '':
                 print wordline
@@ -96,6 +95,6 @@ if __name__ == '__main__':
 
     dat = MatrixFromXLS(inputfile)
     #MatrixFromRawTxt(inputfile,outputfile,columns)
-    CreateMatrixFile(dat,outputfile,5)
+    CreateMatrixFile(dat,outputfile,columns)
 
    
