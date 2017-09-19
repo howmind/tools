@@ -4,7 +4,12 @@
 import os, io
 import sys, getopt
 import random
+import codecs
 
+#sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+#sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
+
+#print sys.stdout.encoding
 
 HeadProperty = ['a','art','ad','conj','prep','pron','int','n','num','v','vi','vt']
 
@@ -33,37 +38,61 @@ if __name__ == '__main__':
     print 'Input file is "', inputfile
     print 'Output file is "', outputfile
 
-    WordPropSort = {'unknown':[],'odd':[]}
+    WordList = {} # {word:[phonetic, meaning],}
+    WordList['!abnormal!'] = []
+    WordPropSort = {'unknown':{},'odd':[]}
     for prop in HeadProperty:
-        WordPropSort[prop] = []
+        WordPropSort[prop] = {}
 
-    content = []
     with io.open(inputfile, 'r', encoding='utf8') as f:
         for line in f.readlines():
             word = line.strip().rstrip('\n')
             if  word != '':
-                splits = word.split(']')
+                splits = word.split('[')
                 if len(splits) > 1:
-                    content.append(splits[1].strip()) 
+                    wordname = splits[0].strip()
+                    WordList[wordname] = []
+                    subsplits = splits[1].split(']')
+                    if len(subsplits) > 1:
+                        WordList[wordname].append(subsplits[0].strip())
+                        WordList[wordname].append(subsplits[1].strip())
+                    else:
+                        del WordList[wordname]
+                        WordList['!abnormal!'].append(word)
                 else:
-                    WordPropSort['odd'].append(splits[0]) 
-                    #content.append(splits[0])
+                    WordList['!abnormal!'].append(word)
+                
     
-    for item in content:
+    for word in WordList:
+        if word == '!abnormal!':
+            WordPropSort['odd'] = WordList[word]
+            continue
+
+        meaning = WordList[word][1]
+        phonetic = WordList[word][0]
+
         issort = False
         for prop in reversed(HeadProperty):
-            strmean = item.lstrip('*').strip()
+            strmean = meaning.lstrip('*').strip()
             if strmean.startswith(prop):
-                WordPropSort[prop].append(strmean)
+                WordPropSort[prop].update({word : [phonetic,meaning]})
                 issort = True
                 break
         if issort is not True:
-           WordPropSort['unknown'].append(item) 
+           WordPropSort['unknown'].update({word : [phonetic,meaning]})
     
     with io.open(outputfile, 'w', encoding='utf8') as of:
         keys = HeadProperty + ['unknown','odd']
         for propkey in keys:
             of.writelines(u'\n' + propkey + u'\n')
-            for meaning in WordPropSort[propkey]:
-                meaning += '\n'
-                of.writelines(meaning)
+            if propkey == 'odd':
+                for item in WordPropSort[propkey]:
+                    item +=  u'\n'
+                    of.writelines(item)
+                   # print item
+            else:
+                for word in WordPropSort[propkey]:
+                        meaning = WordPropSort[propkey][word][1]
+                        phonetic = WordPropSort[propkey][word][0]
+                        of.writelines('%-50s' % meaning + word + u' [' +phonetic +  u']\n')
+                        #print meaning
