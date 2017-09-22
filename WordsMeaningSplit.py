@@ -14,6 +14,21 @@ import codecs
 HeadProperty = ['a','art','ad','conj','prep','pron','int','n','num','v','vi','vt']
 
 
+def ChAlign(string, length=0):  
+    if length == 0:  
+        return string  
+    slen = len(string)  
+    re = string  
+    if isinstance(string, str):  
+        placeholder = ' '  
+    else:  
+        placeholder = u'　'  
+    while slen < length:  
+        re += placeholder  
+        slen += 1  
+    return re  
+
+
 if __name__ == '__main__':
 
     columns = 3
