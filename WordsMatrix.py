@@ -14,13 +14,16 @@ from openpyxl import load_workbook
 # 
 # 
 
-def MatrixFromXLS(filepath):
+def MatrixFromXLS(filepath, sel_sheet):
     print filepath
     wb = load_workbook(filename=filepath, read_only=True, data_only=True)
     worksheets = wb.get_sheet_names()
     print worksheets
     words = {}
+
     for sheetname in worksheets:
+        if sel_sheet is not None and sheetname != sel_sheet:
+            continue
         ws = wb[sheetname]
         words[sheetname] = []
         for row in ws.rows:
@@ -75,14 +78,15 @@ if __name__ == '__main__':
     inputfile = ''
     outputfile = ''
     columns = 5
+    sheetname = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"hi:o:c:",["ifile=","ofile=","columns="])
+        opts, args = getopt.getopt(sys.argv[1:],"hi:o:c:s:",["ifile=","ofile=","columns=","sheet="])
     except getopt.GetoptError:
         print 'test.py -i <inputfile> -o <outputfile>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'test.py -i <inputfile> -o <outputfile>'
+            print 'test.py -i <inputfile> -s <xls sheet name> -o <outputfile> -c <numbers>'
             sys.exit()
         elif opt in ("-i", "--ifile"):
             inputfile = arg
@@ -90,10 +94,13 @@ if __name__ == '__main__':
             outputfile = arg
         elif opt in ("-c", "--columns"):
             columns = int(arg)
+        elif opt in ("-s","--sheet"):
+            sheetname = arg
+
     print 'Input file is "', inputfile
     print 'Output file is "', outputfile
 
-    dat = MatrixFromXLS(inputfile)
+    dat = MatrixFromXLS(inputfile, sheetname)
     #MatrixFromRawTxt(inputfile,outputfile,columns)
     CreateMatrixFile(dat,outputfile,columns)
 
