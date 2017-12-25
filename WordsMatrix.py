@@ -14,28 +14,42 @@ from openpyxl import load_workbook
 # 
 # 
 
-def MatrixFromXLS(filepath, sel_sheet):
+def MatrixFromXLS(filepath, sel_sheets, river):
     print filepath
     wb = load_workbook(filename=filepath, read_only=True, data_only=True)
     worksheets = wb.get_sheet_names()
     print worksheets
     words = {}
-
-    for sheetname in worksheets:
-        if sel_sheet is not None and sheetname != sel_sheet:
+    formatstr = ''
+    print sorted(worksheets)
+    for sheetname in sorted(worksheets):
+        print sheetname
+        iSskip = True
+        for sheetsel in sel_sheets:
+            if sheetsel is not None and sheetname == sheetsel:
+                iSskip = False
+                break
+        
+        if iSskip:
             continue
+
         ws = wb[sheetname]
         words[sheetname] = []
+        formatstr = '%%-%ds' % river
         for row in ws.rows:
-            if row[1].value == None:
-                if row[0].value != None:
-                    words[sheetname].append('%-16s' % row[0].value)
-            else:
-                if isinstance(row[1].value,float):
-                    words[sheetname].append('%-16s' % str(row[0].value))
+            if len(row) > 1:
+                if row[1].value == None:
+                    if row[0].value != None:
+                        words[sheetname].append(formatstr % row[0].value)
                 else:
-                    words[sheetname].append('%-16s' % row[1].value)
-    
+                    if isinstance(row[1].value,float):
+                        words[sheetname].append(formatstr % str(row[0].value))
+                    else:
+                        words[sheetname].append(formatstr % row[1].value)
+            else:
+                if row[0].value != None:
+                        words[sheetname].append(formatstr % row[0].value)
+            #'%-16s'
     return words
 
 
@@ -78,9 +92,10 @@ if __name__ == '__main__':
     inputfile = ''
     outputfile = ''
     columns = 5
-    sheetname = None
+    river = 16
+    sheetnames = []
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"hi:o:c:s:",["ifile=","ofile=","columns=","sheet="])
+        opts, args = getopt.getopt(sys.argv[1:],"hi:o:c:s:r:",["ifile=","ofile=","columns=","sheet=","river="])
     except getopt.GetoptError:
         print 'test.py -i <inputfile> -o <outputfile>'
         sys.exit(2)
@@ -95,12 +110,14 @@ if __name__ == '__main__':
         elif opt in ("-c", "--columns"):
             columns = int(arg)
         elif opt in ("-s","--sheet"):
-            sheetname = arg
+            sheetnames = arg.split(",")
+        elif opt in ("-r","--river"):
+            river = int(arg)
 
     print 'Input file is "', inputfile
     print 'Output file is "', outputfile
-
-    dat = MatrixFromXLS(inputfile, sheetname)
+    print sheetnames
+    dat = MatrixFromXLS(inputfile, sheetnames,river)
     #MatrixFromRawTxt(inputfile,outputfile,columns)
     CreateMatrixFile(dat,outputfile,columns)
 
